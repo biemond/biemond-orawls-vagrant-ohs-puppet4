@@ -40,7 +40,7 @@ file_oracle:
       group:      *wls_os_group
 
 fmw_installations:
-  'webtier1212':
+  'webtier1221':
     fmw_product:               "web"
     ohs_mode:                  "standalone"
     fmw_file1:                 "fmw_12.2.1.2.0_ohs_linux64_Disk1_1of1.zip"
