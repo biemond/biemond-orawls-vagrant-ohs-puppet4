@@ -88,6 +88,7 @@ define orawls::fmw(
   Optional[String] $oracle_inventory_dir                  = undef,
   Boolean $remote_file                                    = $::orawls::weblogic::remote_file,
   Optional[String] $orainstpath_dir                       = lookup('orawls::orainst_dir'),
+  Boolean $cleanup_install_files                          = true,
 )
 {
 
@@ -101,11 +102,6 @@ define orawls::fmw(
 
   case $facts['kernel'] {
     'Linux': {
-      if ( $orainstpath_dir == undef or $orainstpath_dir == '' ){
-        $oraInstPath = '/etc'
-      } else {
-        $oraInstPath = $orainstpath_dir
-      }
       case $facts['architecture'] {
         'i386': {
           $installDir = 'linux'
@@ -116,7 +112,6 @@ define orawls::fmw(
       }
     }
     'SunOS': {
-      $oraInstPath = '/var/opt/oracle'
       case $facts['architecture'] {
         'i86pc': {
           $installDir = 'intelsolaris'
@@ -581,6 +576,7 @@ define orawls::fmw(
     orawls::utils::orainst { "create oraInst for ${name}":
       ora_inventory_dir => $oraInventory,
       os_group          => $os_group,
+      orainstpath_dir   => $orainstpath_dir
     }
 
     file { "${download_dir}/${sanitised_title}_silent.rsp":
@@ -776,7 +772,7 @@ define orawls::fmw(
       }
 
       exec { "install ${sanitised_title}":
-        command     => "${install}${download_dir}/${sanitised_title}/${binFile1} ${command} -invPtrLoc ${oraInstPath}/oraInst.loc -ignoreSysPrereqs -jreLoc ${jdk_home_dir}",
+        command     => "${install}${download_dir}/${sanitised_title}/${binFile1} ${command} -invPtrLoc ${orainstpath_dir}/oraInst.loc -ignoreSysPrereqs -jreLoc ${jdk_home_dir}",
         environment => "TEMP=${temp_dir}",
         timeout     => 0,
         creates     => $oracleHome,
@@ -800,7 +796,7 @@ define orawls::fmw(
       }
 
       exec { "install ${sanitised_title}":
-        command     => "/bin/sh -c 'unset DISPLAY;${download_dir}/${sanitised_title}/Disk1/install/${installDir}/runInstaller ${command} -invPtrLoc ${oraInstPath}/oraInst.loc -ignoreSysPrereqs -jreLoc ${jdk_home_dir} -Djava.io.tmpdir=${temp_dir}'",
+        command     => "/bin/sh -c 'unset DISPLAY;${download_dir}/${sanitised_title}/Disk1/install/${installDir}/runInstaller ${command} -invPtrLoc ${orainstpath_dir}/oraInst.loc -ignoreSysPrereqs -jreLoc ${jdk_home_dir} -Djava.io.tmpdir=${temp_dir}'",
         environment => "TEMP=${temp_dir}",
         timeout     => 0,
         creates     => "${oracleHome}/OPatch",
@@ -812,6 +808,48 @@ define orawls::fmw(
         require     => [File["${download_dir}/${sanitised_title}_silent.rsp"],
                         Orawls::Utils::Orainst["create oraInst for ${name}"],
                         Exec["extract ${fmw_file1} for ${name}"],],
+      }
+    }
+
+    # cleanup
+    if ( $cleanup_install_files ) {
+      exec { "remove extract folder ${title}":
+        command => "rm -rf ${download_dir}/${sanitised_title}",
+        user    => 'root',
+        group   => 'root',
+        path    => $exec_path,
+        cwd     => $temp_dir,
+        require => Exec["install ${sanitised_title}"],
+        }
+      if ( $remote_file == true ){
+        exec { "remove ${fmw_file1} ${title}":
+          command => "rm -rf ${download_dir}/${fmw_file1}",
+          user    => 'root',
+          group   => 'root',
+          path    => $exec_path,
+          cwd     => $temp_dir,
+          require => Exec["install ${sanitised_title}"],
+        }
+        if ( $total_files > 1 ) {
+          exec { "remove ${fmw_file2} ${title}":
+            command => "rm -rf ${download_dir}/${fmw_file2}",
+            user    => 'root',
+            group   => 'root',
+            path    => $exec_path,
+            cwd     => $temp_dir,
+            require => Exec["install ${sanitised_title}"],
+          }
+        }
+        if ( $total_files > 2 ) {
+          exec { "remove ${fmw_file3} ${title}":
+            command => "rm -rf ${download_dir}/${fmw_file3}",
+            user    => 'root',
+            group   => 'root',
+            path    => $exec_path,
+            cwd     => $temp_dir,
+            require => Exec["install ${sanitised_title}"],
+          }
+        }
       }
     }
   }

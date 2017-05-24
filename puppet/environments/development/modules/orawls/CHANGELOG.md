@@ -1,5 +1,26 @@
 # History
 
+## 2.0.8
+- wls_datasource new attributes datasourcetype, statementcachetype
+- wls_jdbc_persistence_store new attributes distribution_policy, migration_policy
+- 12.2.1 ohs/webtier standalone domain fixes
+
+## 2.0.7
+- wls_setting has tmp_path parameter for the wls types index output, wls types index output is now uinque for every value/domain of wls_setting
+- get_attribute_value for index files of the wls types to handle all data types on the right way, located in common.py.erb
+- added weblogic user to the enroll py script on copydomain manifest
+
+## 2.0.6
+- fix nil or '' values on onprovider_specific of wls_authentication_provider
+- be able to set orainstpath_dir parameter on weblogic, weblogic_type and fmw
+
+## 2.0.5
+- Fix ohs domain for 12.1.3 webtier
+- Added FMW cleanup on the extract directory and on the FMW files when remote file = true
+
+## 2.0.4
+- Allow forward slash in the wls type title name, old title regex for detecting the wls_setting name was too eager but the use of slash in the wls_setting name is now not allowed anymore.
+
 ## 2.0.3
 - added oim_configured function check to oimconfig.pp
 
